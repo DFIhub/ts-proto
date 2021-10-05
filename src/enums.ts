@@ -96,6 +96,8 @@ export function generateEnumToJson(fullName: string, enumDesc: EnumDescriptorPro
   const functionName = camelCase(fullName) + 'ToJSON';
   chunks.push(code`export function ${def(functionName)}(object: ${fullName}): string {`);
   if (ctx.options.outputIntEnumInJson) {
+    chunks.push(code`return ${fullName}.${valueDesc.name};`);
+  } else {
     chunks.push(code`switch (object) {`);
 
     for (const valueDesc of enumDesc.value) {
