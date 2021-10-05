@@ -42,7 +42,7 @@ export function generateEnum(
   }
   if (options.outputJsonMethods) {
     chunks.push(code`\n`);
-    chunks.push(generateEnumToJson(fullName, enumDesc));
+    chunks.push(generateEnumToJson(fullName, enumDesc, ctx));
   }
   if (options.stringEnums && options.outputEncodeMethods) {
     chunks.push(code`\n`);
