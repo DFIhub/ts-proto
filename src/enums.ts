@@ -90,19 +90,21 @@ export function generateEnumFromJson(ctx: Context, fullName: string, enumDesc: E
 }
 
 /** Generates a function with a big switch statement to encode our enum -> JSON. */
-export function generateEnumToJson(fullName: string, enumDesc: EnumDescriptorProto): Code {
+export function generateEnumToJson(fullName: string, enumDesc: EnumDescriptorProto, ctx: Context): Code {
   const chunks: Code[] = [];
 
   const functionName = camelCase(fullName) + 'ToJSON';
   chunks.push(code`export function ${def(functionName)}(object: ${fullName}): string {`);
-  chunks.push(code`switch (object) {`);
+  if (ctx.options.outputIntEnumInJson) {
+    chunks.push(code`switch (object) {`);
 
-  for (const valueDesc of enumDesc.value) {
-    chunks.push(code`case ${fullName}.${valueDesc.name}: return "${valueDesc.name}";`);
+    for (const valueDesc of enumDesc.value) {
+      chunks.push(code`case ${fullName}.${valueDesc.name}: return "${valueDesc.name}";`);
+    }
+    chunks.push(code`default: return "UNKNOWN";`);
+
+    chunks.push(code`}`);
   }
-  chunks.push(code`default: return "UNKNOWN";`);
-
-  chunks.push(code`}`);
   chunks.push(code`}`);
   return joinCode(chunks, { on: '\n' });
 }
