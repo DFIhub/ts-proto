@@ -75,10 +75,11 @@ function generateEnumFromJson(ctx, fullName, enumDesc) {
 exports.generateEnumFromJson = generateEnumFromJson;
 /** Generates a function with a big switch statement to encode our enum -> JSON. */
 function generateEnumToJson(fullName, enumDesc, ctx) {
+    const { outputIntEnumInJson } = ctx.options;
     const chunks = [];
     const functionName = case_1.camelCase(fullName) + 'ToJSON';
-    chunks.push(ts_poet_1.code `export function ${ts_poet_1.def(functionName)}(object: ${fullName}): string {`);
-    if (ctx.options.outputIntEnumInJson) {
+    chunks.push(ts_poet_1.code `export function ${ts_poet_1.def(functionName)}(object: ${fullName}): ${outputIntEnumInJson ? 'number' : 'string'} {`);
+    if (outputIntEnumInJson) {
         chunks.push(ts_poet_1.code `return object;`);
     }
     else {
