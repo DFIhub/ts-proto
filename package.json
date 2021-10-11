@@ -1,9 +1,9 @@
 {
   "name": "ts-proto",
-  "version": "1.83.1",
+  "version": "1.83.1-intenum",
   "description": "",
   "main": "build/plugin.js",
-  "repository": "github:stephenh/ts-proto",
+  "repository": "github:DFIhub/ts-proto",
   "bin": {
     "protoc-gen-ts_proto": "./protoc-gen-ts_proto"
   },
