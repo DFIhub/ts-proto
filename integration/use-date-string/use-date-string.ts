@@ -18,7 +18,9 @@ export interface Todo_MapOfTimestampsEntry {
   value: string | undefined;
 }
 
-const baseTodo: object = { id: '' };
+function createBaseTodo(): Todo {
+  return { id: '', timestamp: undefined, repeatedTimestamp: [], optionalTimestamp: undefined, mapOfTimestamps: {} };
+}
 
 export const Todo = {
   encode(message: Todo, writer: Writer = Writer.create()): Writer {
@@ -43,9 +45,7 @@ export const Todo = {
   decode(input: Reader | Uint8Array, length?: number): Todo {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseTodo } as Todo;
-    message.repeatedTimestamp = [];
-    message.mapOfTimestamps = {};
+    const message = createBaseTodo();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -76,35 +76,20 @@ export const Todo = {
   },
 
   fromJSON(object: any): Todo {
-    const message = { ...baseTodo } as Todo;
-    message.repeatedTimestamp = [];
-    message.mapOfTimestamps = {};
-    if (object.id !== undefined && object.id !== null) {
-      message.id = String(object.id);
-    } else {
-      message.id = '';
-    }
-    if (object.timestamp !== undefined && object.timestamp !== null) {
-      message.timestamp = String(object.timestamp);
-    } else {
-      message.timestamp = undefined;
-    }
-    if (object.repeatedTimestamp !== undefined && object.repeatedTimestamp !== null) {
-      for (const e of object.repeatedTimestamp) {
-        message.repeatedTimestamp.push(String(e));
-      }
-    }
-    if (object.optionalTimestamp !== undefined && object.optionalTimestamp !== null) {
-      message.optionalTimestamp = String(object.optionalTimestamp);
-    } else {
-      message.optionalTimestamp = undefined;
-    }
-    if (object.mapOfTimestamps !== undefined && object.mapOfTimestamps !== null) {
-      Object.entries(object.mapOfTimestamps).forEach(([key, value]) => {
-        message.mapOfTimestamps[key] = String(value);
-      });
-    }
-    return message;
+    return {
+      id: isSet(object.id) ? String(object.id) : '',
+      timestamp: isSet(object.timestamp) ? String(object.timestamp) : undefined,
+      repeatedTimestamp: Array.isArray(object?.repeatedTimestamp)
+        ? object.repeatedTimestamp.map((e: any) => String(e))
+        : [],
+      optionalTimestamp: isSet(object.optionalTimestamp) ? String(object.optionalTimestamp) : undefined,
+      mapOfTimestamps: isObject(object.mapOfTimestamps)
+        ? Object.entries(object.mapOfTimestamps).reduce<{ [key: string]: string }>((acc, [key, value]) => {
+            acc[key] = String(value);
+            return acc;
+          }, {})
+        : {},
+    };
   },
 
   toJSON(message: Todo): unknown {
@@ -126,42 +111,28 @@ export const Todo = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Todo>): Todo {
-    const message = { ...baseTodo } as Todo;
-    message.repeatedTimestamp = [];
-    message.mapOfTimestamps = {};
-    if (object.id !== undefined && object.id !== null) {
-      message.id = object.id;
-    } else {
-      message.id = '';
-    }
-    if (object.timestamp !== undefined && object.timestamp !== null) {
-      message.timestamp = object.timestamp;
-    } else {
-      message.timestamp = undefined;
-    }
-    if (object.repeatedTimestamp !== undefined && object.repeatedTimestamp !== null) {
-      for (const e of object.repeatedTimestamp) {
-        message.repeatedTimestamp.push(e);
-      }
-    }
-    if (object.optionalTimestamp !== undefined && object.optionalTimestamp !== null) {
-      message.optionalTimestamp = object.optionalTimestamp;
-    } else {
-      message.optionalTimestamp = undefined;
-    }
-    if (object.mapOfTimestamps !== undefined && object.mapOfTimestamps !== null) {
-      Object.entries(object.mapOfTimestamps).forEach(([key, value]) => {
+  fromPartial<I extends Exact<DeepPartial<Todo>, I>>(object: I): Todo {
+    const message = createBaseTodo();
+    message.id = object.id ?? '';
+    message.timestamp = object.timestamp ?? undefined;
+    message.repeatedTimestamp = object.repeatedTimestamp?.map((e) => e) || [];
+    message.optionalTimestamp = object.optionalTimestamp ?? undefined;
+    message.mapOfTimestamps = Object.entries(object.mapOfTimestamps ?? {}).reduce<{ [key: string]: string }>(
+      (acc, [key, value]) => {
         if (value !== undefined) {
-          message.mapOfTimestamps[key] = value;
+          acc[key] = value;
         }
-      });
-    }
+        return acc;
+      },
+      {}
+    );
     return message;
   },
 };
 
-const baseTodo_MapOfTimestampsEntry: object = { key: '' };
+function createBaseTodo_MapOfTimestampsEntry(): Todo_MapOfTimestampsEntry {
+  return { key: '', value: undefined };
+}
 
 export const Todo_MapOfTimestampsEntry = {
   encode(message: Todo_MapOfTimestampsEntry, writer: Writer = Writer.create()): Writer {
@@ -177,7 +148,7 @@ export const Todo_MapOfTimestampsEntry = {
   decode(input: Reader | Uint8Array, length?: number): Todo_MapOfTimestampsEntry {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseTodo_MapOfTimestampsEntry } as Todo_MapOfTimestampsEntry;
+    const message = createBaseTodo_MapOfTimestampsEntry();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -196,18 +167,10 @@ export const Todo_MapOfTimestampsEntry = {
   },
 
   fromJSON(object: any): Todo_MapOfTimestampsEntry {
-    const message = { ...baseTodo_MapOfTimestampsEntry } as Todo_MapOfTimestampsEntry;
-    if (object.key !== undefined && object.key !== null) {
-      message.key = String(object.key);
-    } else {
-      message.key = '';
-    }
-    if (object.value !== undefined && object.value !== null) {
-      message.value = String(object.value);
-    } else {
-      message.value = undefined;
-    }
-    return message;
+    return {
+      key: isSet(object.key) ? String(object.key) : '',
+      value: isSet(object.value) ? String(object.value) : undefined,
+    };
   },
 
   toJSON(message: Todo_MapOfTimestampsEntry): unknown {
@@ -217,23 +180,16 @@ export const Todo_MapOfTimestampsEntry = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Todo_MapOfTimestampsEntry>): Todo_MapOfTimestampsEntry {
-    const message = { ...baseTodo_MapOfTimestampsEntry } as Todo_MapOfTimestampsEntry;
-    if (object.key !== undefined && object.key !== null) {
-      message.key = object.key;
-    } else {
-      message.key = '';
-    }
-    if (object.value !== undefined && object.value !== null) {
-      message.value = object.value;
-    } else {
-      message.value = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Todo_MapOfTimestampsEntry>, I>>(object: I): Todo_MapOfTimestampsEntry {
+    const message = createBaseTodo_MapOfTimestampsEntry();
+    message.key = object.key ?? '';
+    message.value = object.value ?? undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -243,6 +199,11 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 function toTimestamp(dateStr: string): Timestamp {
   const date = new Date(dateStr);
@@ -262,4 +223,12 @@ function fromTimestamp(t: Timestamp): string {
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isObject(value: any): boolean {
+  return typeof value === 'object' && value !== null;
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

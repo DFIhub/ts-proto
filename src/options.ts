@@ -30,20 +30,23 @@ export enum ServiceOption {
 
 export type Options = {
   context: boolean;
-  snakeToCamel: boolean;
+  snakeToCamel: Array<'json' | 'keys'>;
   forceLong: LongOption;
-  useOptionals: boolean;
+  useOptionals: boolean | 'none' | 'messages' | 'all'; // boolean is deprecated
   useDate: DateOption;
+  useMongoObjectId: boolean;
   oneof: OneofOption;
   esModuleInterop: boolean;
+  fileSuffix: string;
   outputEncodeMethods: boolean;
   outputJsonMethods: boolean;
   outputPartialMethods: boolean;
   outputTypeRegistry: boolean;
   stringEnums: boolean;
   constEnums: boolean;
+  enumsAsLiterals: boolean;
   outputClientImpl: boolean | 'grpc-web';
-  outputServices: ServiceOption;
+  outputServices: ServiceOption[];
   addGrpcMetadata: boolean;
   addNestjsRestParameter: boolean;
   returnObservable: boolean;
@@ -57,17 +60,22 @@ export type Options = {
   onlyTypes: boolean;
   emitImportedFiles: boolean;
   outputIntEnumInJson: boolean;
+  useExactTypes: boolean;
+  unknownFields: boolean;
+  usePrototypeForDefaults: boolean;
 };
 
 export function defaultOptions(): Options {
   return {
     context: false,
-    snakeToCamel: true,
+    snakeToCamel: ['json', 'keys'],
     forceLong: LongOption.NUMBER,
-    useOptionals: false,
+    useOptionals: 'none',
     useDate: DateOption.DATE,
+    useMongoObjectId: false,
     oneof: OneofOption.PROPERTIES,
     esModuleInterop: false,
+    fileSuffix: '',
     lowerCaseServiceMethods: false,
     outputEncodeMethods: true,
     outputJsonMethods: true,
@@ -75,8 +83,9 @@ export function defaultOptions(): Options {
     outputTypeRegistry: false,
     stringEnums: false,
     constEnums: false,
+    enumsAsLiterals: false,
     outputClientImpl: true,
-    outputServices: ServiceOption.DEFAULT,
+    outputServices: [],
     returnObservable: false,
     addGrpcMetadata: false,
     addNestjsRestParameter: false,
@@ -88,6 +97,9 @@ export function defaultOptions(): Options {
     onlyTypes: false,
     emitImportedFiles: true,
     outputIntEnumInJson: false,
+    useExactTypes: true,
+    unknownFields: false,
+    usePrototypeForDefaults: false,
   };
 }
 
@@ -100,7 +112,7 @@ const nestJsOptions: Partial<Options> = {
   useDate: DateOption.TIMESTAMP,
 };
 
-export function optionsFromParameter(parameter: string): Options {
+export function optionsFromParameter(parameter: string | undefined): Options {
   const options = defaultOptions();
   if (parameter) {
     const parsed = parseParameter(parameter);
@@ -113,6 +125,7 @@ export function optionsFromParameter(parameter: string): Options {
   if (!options.outputJsonMethods && !options.outputEncodeMethods && !options.outputClientImpl && !options.nestJs) {
     options.onlyTypes = true;
   }
+
   // Treat forceLong=true as LONG
   if ((options.forceLong as any) === true) {
     options.forceLong = LongOption.LONG;
@@ -120,7 +133,16 @@ export function optionsFromParameter(parameter: string): Options {
 
   // Treat outputServices=false as NONE
   if ((options.outputServices as any) === false) {
-    options.outputServices = ServiceOption.NONE;
+    options.outputServices = [ServiceOption.NONE];
+  }
+
+  // Existing type-coercion inside parseParameter leaves a little to be desired.
+  if (typeof options.outputServices == 'string') {
+    options.outputServices = [options.outputServices];
+  }
+
+  if (options.outputServices.length == 0) {
+    options.outputServices = [ServiceOption.DEFAULT];
   }
 
   if ((options.useDate as any) === true) {
@@ -130,6 +152,15 @@ export function optionsFromParameter(parameter: string): Options {
     // Treat useDate=false as TIMESTAMP
     options.useDate = DateOption.TIMESTAMP;
   }
+
+  if ((options.snakeToCamel as any) === false) {
+    options.snakeToCamel = [];
+  } else if ((options.snakeToCamel as any) === true) {
+    options.snakeToCamel = ['keys', 'json'];
+  } else if (typeof options.snakeToCamel === 'string') {
+    options.snakeToCamel = [options.snakeToCamel];
+  }
+
   return options;
 }
 
@@ -137,8 +168,13 @@ export function optionsFromParameter(parameter: string): Options {
 function parseParameter(parameter: string): Options {
   const options = {} as any;
   const pairs = parameter.split(',').map((s) => s.split('='));
-  pairs.forEach(([key, value]) => {
-    options[key] = value === 'true' ? true : value === 'false' ? false : value;
+  pairs.forEach(([key, _value]) => {
+    const value = _value === 'true' ? true : _value === 'false' ? false : _value;
+    if (options[key]) {
+      options[key] = [options[key], value];
+    } else {
+      options[key] = value;
+    }
   });
   return options;
 }

@@ -9,7 +9,9 @@ export interface ImportedThing {
   createdAt?: Date;
 }
 
-const baseImportedThing: object = {};
+function createBaseImportedThing(): ImportedThing {
+  return { createdAt: undefined };
+}
 
 export const ImportedThing = {
   encode(message: ImportedThing, writer: Writer = Writer.create()): Writer {
@@ -22,7 +24,7 @@ export const ImportedThing = {
   decode(input: Reader | Uint8Array, length?: number): ImportedThing {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseImportedThing } as ImportedThing;
+    const message = createBaseImportedThing();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -38,13 +40,9 @@ export const ImportedThing = {
   },
 
   fromJSON(object: any): ImportedThing {
-    const message = { ...baseImportedThing } as ImportedThing;
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = fromJsonTimestamp(object.createdAt);
-    } else {
-      message.createdAt = undefined;
-    }
-    return message;
+    return {
+      createdAt: isSet(object.createdAt) ? fromJsonTimestamp(object.createdAt) : undefined,
+    };
   },
 
   toJSON(message: ImportedThing): unknown {
@@ -53,18 +51,15 @@ export const ImportedThing = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<ImportedThing>): ImportedThing {
-    const message = { ...baseImportedThing } as ImportedThing;
-    if (object.createdAt !== undefined && object.createdAt !== null) {
-      message.createdAt = object.createdAt;
-    } else {
-      message.createdAt = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<ImportedThing>, I>>(object: I): ImportedThing {
+    const message = createBaseImportedThing();
+    message.createdAt = object.createdAt ?? undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -74,6 +69,11 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 function toTimestamp(date: Date): Timestamp {
   const seconds = date.getTime() / 1_000;
@@ -102,4 +102,8 @@ function fromJsonTimestamp(o: any): Date {
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

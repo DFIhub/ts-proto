@@ -127,12 +127,16 @@ describe('simple', () => {
       Array [
         "name",
         "age",
+        "createdAt",
+        "child",
         "state",
+        "grandChildren",
         "coins",
         "snacks",
         "oldStates",
-        "grandChildren",
+        "thing",
         "blobs",
+        "birthday",
         "blob",
       ]
     `);
@@ -231,11 +235,40 @@ describe('simple', () => {
       intLookup: { 1: 2, 2: 1 },
       mapOfTimestamps: {},
       mapOfBytes: {},
+      mapOfStringValues: { a: '1', b: '', c: undefined },
+      longLookup: { 1: 2, 2: 1 },
     };
-    const s2 = PbSimpleWithMap.toObject(PbSimpleWithMap.decode(SimpleWithMap.encode(s1).finish()));
-    delete (s1 as any).mapOfTimestamps;
-    delete (s1 as any).mapOfBytes;
-    expect(s2).toEqual(s1);
+    // const s2 = PbSimpleWithMap.toObject(PbSimpleWithMap.decode(SimpleWithMap.encode(s1).finish()));
+    const s2 = SimpleWithMap.decode(SimpleWithMap.encode(s1).finish());
+    expect(s2).toMatchInlineSnapshot(`
+      Object {
+        "entitiesById": Object {
+          "1": Object {
+            "id": 1,
+          },
+          "2": Object {
+            "id": 2,
+          },
+        },
+        "intLookup": Object {
+          "1": 2,
+          "2": 1,
+        },
+        "longLookup": Object {
+          "1": 2,
+          "2": 1,
+        },
+        "mapOfBytes": Object {},
+        "mapOfStringValues": Object {
+          "a": "1",
+          "b": "",
+        },
+        "mapOfTimestamps": Object {},
+        "nameLookup": Object {
+          "foo": "bar",
+        },
+      }
+    `);
   });
 
   it('can encode maps with default values', () => {
@@ -245,6 +278,8 @@ describe('simple', () => {
       intLookup: { 1: 0 },
       mapOfTimestamps: {},
       mapOfBytes: {},
+      mapOfStringValues: { foo: '', bar: undefined },
+      longLookup: { 1: 2, 2: 1 },
     };
     const s2 = SimpleWithMap.decode(SimpleWithMap.encode(s1).finish());
     expect(s2).toEqual(s1);
@@ -264,6 +299,7 @@ describe('simple', () => {
       nameLookup: {},
       mapOfTimestamps: {},
       mapOfBytes: {},
+      mapOfStringValues: {},
     });
   });
 
@@ -288,8 +324,19 @@ describe('simple', () => {
     `);
   });
 
+  it('has fromPartial uses exact types', () => {
+    const s1 = Simple.fromPartial({
+      // @ts-expect-error
+      grandChildren: ['a', 'b'].map((name) => ({ name, typ: null })),
+    });
+  });
+
   it('can fromPartial on maps with falsey values', () => {
-    const s1 = SimpleWithMap.fromPartial({ intLookup: { 1: 2, 2: 0 } });
+    const s1 = SimpleWithMap.fromPartial({
+      intLookup: { 1: 2, 2: 0 },
+      mapOfStringValues: { a: '1', b: '', c: undefined },
+      longLookup: { 1: 2, 2: 0 },
+    });
     expect(s1).toMatchInlineSnapshot(`
       Object {
         "entitiesById": Object {},
@@ -297,7 +344,15 @@ describe('simple', () => {
           "1": 2,
           "2": 0,
         },
+        "longLookup": Object {
+          "1": 2,
+          "2": 0,
+        },
         "mapOfBytes": Object {},
+        "mapOfStringValues": Object {
+          "a": "1",
+          "b": "",
+        },
         "mapOfTimestamps": Object {},
         "nameLookup": Object {},
       }

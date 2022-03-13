@@ -8,7 +8,9 @@ export interface SimpleMessage {
   numberField: number;
 }
 
-const baseSimpleMessage: object = { numberField: 0 };
+function createBaseSimpleMessage(): SimpleMessage {
+  return { numberField: 0 };
+}
 
 export const SimpleMessage = {
   encode(message: SimpleMessage, writer: Writer = Writer.create()): Writer {
@@ -21,7 +23,7 @@ export const SimpleMessage = {
   decode(input: Reader | Uint8Array, length?: number): SimpleMessage {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseSimpleMessage } as SimpleMessage;
+    const message = createBaseSimpleMessage();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -37,33 +39,26 @@ export const SimpleMessage = {
   },
 
   fromJSON(object: any): SimpleMessage {
-    const message = { ...baseSimpleMessage } as SimpleMessage;
-    if (object.numberField !== undefined && object.numberField !== null) {
-      message.numberField = Number(object.numberField);
-    } else {
-      message.numberField = 0;
-    }
-    return message;
+    return {
+      numberField: isSet(object.numberField) ? Number(object.numberField) : 0,
+    };
   },
 
   toJSON(message: SimpleMessage): unknown {
     const obj: any = {};
-    message.numberField !== undefined && (obj.numberField = message.numberField);
+    message.numberField !== undefined && (obj.numberField = Math.round(message.numberField));
     return obj;
   },
 
-  fromPartial(object: DeepPartial<SimpleMessage>): SimpleMessage {
-    const message = { ...baseSimpleMessage } as SimpleMessage;
-    if (object.numberField !== undefined && object.numberField !== null) {
-      message.numberField = object.numberField;
-    } else {
-      message.numberField = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<SimpleMessage>, I>>(object: I): SimpleMessage {
+    const message = createBaseSimpleMessage();
+    message.numberField = object.numberField ?? 0;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -74,9 +69,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

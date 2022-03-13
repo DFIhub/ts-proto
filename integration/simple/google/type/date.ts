@@ -35,7 +35,9 @@ export interface DateMessage {
   day: number;
 }
 
-const baseDateMessage: object = { year: 0, month: 0, day: 0 };
+function createBaseDateMessage(): DateMessage {
+  return { year: 0, month: 0, day: 0 };
+}
 
 export const DateMessage = {
   encode(message: DateMessage, writer: Writer = Writer.create()): Writer {
@@ -54,7 +56,7 @@ export const DateMessage = {
   decode(input: Reader | Uint8Array, length?: number): DateMessage {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDateMessage } as DateMessage;
+    const message = createBaseDateMessage();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -76,55 +78,32 @@ export const DateMessage = {
   },
 
   fromJSON(object: any): DateMessage {
-    const message = { ...baseDateMessage } as DateMessage;
-    if (object.year !== undefined && object.year !== null) {
-      message.year = Number(object.year);
-    } else {
-      message.year = 0;
-    }
-    if (object.month !== undefined && object.month !== null) {
-      message.month = Number(object.month);
-    } else {
-      message.month = 0;
-    }
-    if (object.day !== undefined && object.day !== null) {
-      message.day = Number(object.day);
-    } else {
-      message.day = 0;
-    }
-    return message;
+    return {
+      year: isSet(object.year) ? Number(object.year) : 0,
+      month: isSet(object.month) ? Number(object.month) : 0,
+      day: isSet(object.day) ? Number(object.day) : 0,
+    };
   },
 
   toJSON(message: DateMessage): unknown {
     const obj: any = {};
-    message.year !== undefined && (obj.year = message.year);
-    message.month !== undefined && (obj.month = message.month);
-    message.day !== undefined && (obj.day = message.day);
+    message.year !== undefined && (obj.year = Math.round(message.year));
+    message.month !== undefined && (obj.month = Math.round(message.month));
+    message.day !== undefined && (obj.day = Math.round(message.day));
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DateMessage>): DateMessage {
-    const message = { ...baseDateMessage } as DateMessage;
-    if (object.year !== undefined && object.year !== null) {
-      message.year = object.year;
-    } else {
-      message.year = 0;
-    }
-    if (object.month !== undefined && object.month !== null) {
-      message.month = object.month;
-    } else {
-      message.month = 0;
-    }
-    if (object.day !== undefined && object.day !== null) {
-      message.day = object.day;
-    } else {
-      message.day = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<DateMessage>, I>>(object: I): DateMessage {
+    const message = createBaseDateMessage();
+    message.year = object.year ?? 0;
+    message.month = object.month ?? 0;
+    message.day = object.day ?? 0;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -135,9 +114,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

@@ -10,7 +10,9 @@ export interface ImportedThing {
   createdAt: Date | undefined;
 }
 
-const baseImportedThing: object = {};
+function createBaseImportedThing(): ImportedThing {
+  return { createdAt: undefined };
+}
 
 export const ImportedThing = {
   encode(message: ImportedThing, writer: Writer = Writer.create()): Writer {
@@ -23,7 +25,7 @@ export const ImportedThing = {
   decode(input: Reader | Uint8Array, length?: number): ImportedThing {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseImportedThing } as ImportedThing;
+    const message = createBaseImportedThing();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -47,11 +49,14 @@ export interface ProtoMetadata {
 
 export const protoMetadata: ProtoMetadata = {
   fileDescriptor: FileDescriptorProto.fromPartial({
+    name: 'import_dir/thing.proto',
+    package: 'simple',
     dependency: ['google/protobuf/timestamp.proto'],
     publicDependency: [],
     weakDependency: [],
     messageType: [
       {
+        name: 'ImportedThing',
         field: [
           {
             name: 'created_at',
@@ -59,7 +64,11 @@ export const protoMetadata: ProtoMetadata = {
             label: 1,
             type: 11,
             typeName: '.google.protobuf.Timestamp',
+            extendee: '',
+            defaultValue: '',
+            oneofIndex: 0,
             jsonName: 'createdAt',
+            proto3Optional: false,
           },
         ],
         extension: [],
@@ -69,14 +78,11 @@ export const protoMetadata: ProtoMetadata = {
         oneofDecl: [],
         reservedRange: [],
         reservedName: [],
-        name: 'ImportedThing',
       },
     ],
     enumType: [],
     service: [],
     extension: [],
-    name: 'import_dir/thing.proto',
-    package: 'simple',
     sourceCodeInfo: { location: [] },
     syntax: 'proto3',
   }),

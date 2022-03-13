@@ -13,7 +13,9 @@ export interface ProduceReply {
   result: string;
 }
 
-const baseProduceRequest: object = { ingredients: '' };
+function createBaseProduceRequest(): ProduceRequest {
+  return { ingredients: '' };
+}
 
 export const ProduceRequest = {
   encode(message: ProduceRequest, writer: Writer = Writer.create()): Writer {
@@ -26,7 +28,7 @@ export const ProduceRequest = {
   decode(input: Reader | Uint8Array, length?: number): ProduceRequest {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseProduceRequest } as ProduceRequest;
+    const message = createBaseProduceRequest();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -42,13 +44,9 @@ export const ProduceRequest = {
   },
 
   fromJSON(object: any): ProduceRequest {
-    const message = { ...baseProduceRequest } as ProduceRequest;
-    if (object.ingredients !== undefined && object.ingredients !== null) {
-      message.ingredients = String(object.ingredients);
-    } else {
-      message.ingredients = '';
-    }
-    return message;
+    return {
+      ingredients: isSet(object.ingredients) ? String(object.ingredients) : '',
+    };
   },
 
   toJSON(message: ProduceRequest): unknown {
@@ -57,18 +55,16 @@ export const ProduceRequest = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<ProduceRequest>): ProduceRequest {
-    const message = { ...baseProduceRequest } as ProduceRequest;
-    if (object.ingredients !== undefined && object.ingredients !== null) {
-      message.ingredients = object.ingredients;
-    } else {
-      message.ingredients = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<ProduceRequest>, I>>(object: I): ProduceRequest {
+    const message = createBaseProduceRequest();
+    message.ingredients = object.ingredients ?? '';
     return message;
   },
 };
 
-const baseProduceReply: object = { result: '' };
+function createBaseProduceReply(): ProduceReply {
+  return { result: '' };
+}
 
 export const ProduceReply = {
   encode(message: ProduceReply, writer: Writer = Writer.create()): Writer {
@@ -81,7 +77,7 @@ export const ProduceReply = {
   decode(input: Reader | Uint8Array, length?: number): ProduceReply {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseProduceReply } as ProduceReply;
+    const message = createBaseProduceReply();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -97,13 +93,9 @@ export const ProduceReply = {
   },
 
   fromJSON(object: any): ProduceReply {
-    const message = { ...baseProduceReply } as ProduceReply;
-    if (object.result !== undefined && object.result !== null) {
-      message.result = String(object.result);
-    } else {
-      message.result = '';
-    }
-    return message;
+    return {
+      result: isSet(object.result) ? String(object.result) : '',
+    };
   },
 
   toJSON(message: ProduceReply): unknown {
@@ -112,13 +104,9 @@ export const ProduceReply = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<ProduceReply>): ProduceReply {
-    const message = { ...baseProduceReply } as ProduceReply;
-    if (object.result !== undefined && object.result !== null) {
-      message.result = object.result;
-    } else {
-      message.result = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<ProduceReply>, I>>(object: I): ProduceReply {
+    const message = createBaseProduceReply();
+    message.result = object.result ?? '';
     return message;
   },
 };
@@ -128,6 +116,7 @@ export interface Factory {
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -138,9 +127,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

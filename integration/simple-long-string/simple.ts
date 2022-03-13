@@ -23,20 +23,24 @@ export interface Numbers {
   timestamp: Date | undefined;
 }
 
-const baseNumbers: object = {
-  double: 0,
-  float: 0,
-  int32: 0,
-  int64: '0',
-  uint32: 0,
-  uint64: '0',
-  sint32: 0,
-  sint64: '0',
-  fixed32: 0,
-  fixed64: '0',
-  sfixed32: 0,
-  sfixed64: '0',
-};
+function createBaseNumbers(): Numbers {
+  return {
+    double: 0,
+    float: 0,
+    int32: 0,
+    int64: '0',
+    uint32: 0,
+    uint64: '0',
+    sint32: 0,
+    sint64: '0',
+    fixed32: 0,
+    fixed64: '0',
+    sfixed32: 0,
+    sfixed64: '0',
+    guint64: undefined,
+    timestamp: undefined,
+  };
+}
 
 export const Numbers = {
   encode(message: Numbers, writer: Writer = Writer.create()): Writer {
@@ -88,7 +92,7 @@ export const Numbers = {
   decode(input: Reader | Uint8Array, length?: number): Numbers {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseNumbers } as Numbers;
+    const message = createBaseNumbers();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -143,176 +147,65 @@ export const Numbers = {
   },
 
   fromJSON(object: any): Numbers {
-    const message = { ...baseNumbers } as Numbers;
-    if (object.double !== undefined && object.double !== null) {
-      message.double = Number(object.double);
-    } else {
-      message.double = 0;
-    }
-    if (object.float !== undefined && object.float !== null) {
-      message.float = Number(object.float);
-    } else {
-      message.float = 0;
-    }
-    if (object.int32 !== undefined && object.int32 !== null) {
-      message.int32 = Number(object.int32);
-    } else {
-      message.int32 = 0;
-    }
-    if (object.int64 !== undefined && object.int64 !== null) {
-      message.int64 = String(object.int64);
-    } else {
-      message.int64 = '0';
-    }
-    if (object.uint32 !== undefined && object.uint32 !== null) {
-      message.uint32 = Number(object.uint32);
-    } else {
-      message.uint32 = 0;
-    }
-    if (object.uint64 !== undefined && object.uint64 !== null) {
-      message.uint64 = String(object.uint64);
-    } else {
-      message.uint64 = '0';
-    }
-    if (object.sint32 !== undefined && object.sint32 !== null) {
-      message.sint32 = Number(object.sint32);
-    } else {
-      message.sint32 = 0;
-    }
-    if (object.sint64 !== undefined && object.sint64 !== null) {
-      message.sint64 = String(object.sint64);
-    } else {
-      message.sint64 = '0';
-    }
-    if (object.fixed32 !== undefined && object.fixed32 !== null) {
-      message.fixed32 = Number(object.fixed32);
-    } else {
-      message.fixed32 = 0;
-    }
-    if (object.fixed64 !== undefined && object.fixed64 !== null) {
-      message.fixed64 = String(object.fixed64);
-    } else {
-      message.fixed64 = '0';
-    }
-    if (object.sfixed32 !== undefined && object.sfixed32 !== null) {
-      message.sfixed32 = Number(object.sfixed32);
-    } else {
-      message.sfixed32 = 0;
-    }
-    if (object.sfixed64 !== undefined && object.sfixed64 !== null) {
-      message.sfixed64 = String(object.sfixed64);
-    } else {
-      message.sfixed64 = '0';
-    }
-    if (object.guint64 !== undefined && object.guint64 !== null) {
-      message.guint64 = String(object.guint64);
-    } else {
-      message.guint64 = undefined;
-    }
-    if (object.timestamp !== undefined && object.timestamp !== null) {
-      message.timestamp = fromJsonTimestamp(object.timestamp);
-    } else {
-      message.timestamp = undefined;
-    }
-    return message;
+    return {
+      double: isSet(object.double) ? Number(object.double) : 0,
+      float: isSet(object.float) ? Number(object.float) : 0,
+      int32: isSet(object.int32) ? Number(object.int32) : 0,
+      int64: isSet(object.int64) ? String(object.int64) : '0',
+      uint32: isSet(object.uint32) ? Number(object.uint32) : 0,
+      uint64: isSet(object.uint64) ? String(object.uint64) : '0',
+      sint32: isSet(object.sint32) ? Number(object.sint32) : 0,
+      sint64: isSet(object.sint64) ? String(object.sint64) : '0',
+      fixed32: isSet(object.fixed32) ? Number(object.fixed32) : 0,
+      fixed64: isSet(object.fixed64) ? String(object.fixed64) : '0',
+      sfixed32: isSet(object.sfixed32) ? Number(object.sfixed32) : 0,
+      sfixed64: isSet(object.sfixed64) ? String(object.sfixed64) : '0',
+      guint64: isSet(object.guint64) ? String(object.guint64) : undefined,
+      timestamp: isSet(object.timestamp) ? fromJsonTimestamp(object.timestamp) : undefined,
+    };
   },
 
   toJSON(message: Numbers): unknown {
     const obj: any = {};
     message.double !== undefined && (obj.double = message.double);
     message.float !== undefined && (obj.float = message.float);
-    message.int32 !== undefined && (obj.int32 = message.int32);
+    message.int32 !== undefined && (obj.int32 = Math.round(message.int32));
     message.int64 !== undefined && (obj.int64 = message.int64);
-    message.uint32 !== undefined && (obj.uint32 = message.uint32);
+    message.uint32 !== undefined && (obj.uint32 = Math.round(message.uint32));
     message.uint64 !== undefined && (obj.uint64 = message.uint64);
-    message.sint32 !== undefined && (obj.sint32 = message.sint32);
+    message.sint32 !== undefined && (obj.sint32 = Math.round(message.sint32));
     message.sint64 !== undefined && (obj.sint64 = message.sint64);
-    message.fixed32 !== undefined && (obj.fixed32 = message.fixed32);
+    message.fixed32 !== undefined && (obj.fixed32 = Math.round(message.fixed32));
     message.fixed64 !== undefined && (obj.fixed64 = message.fixed64);
-    message.sfixed32 !== undefined && (obj.sfixed32 = message.sfixed32);
+    message.sfixed32 !== undefined && (obj.sfixed32 = Math.round(message.sfixed32));
     message.sfixed64 !== undefined && (obj.sfixed64 = message.sfixed64);
     message.guint64 !== undefined && (obj.guint64 = message.guint64);
     message.timestamp !== undefined && (obj.timestamp = message.timestamp.toISOString());
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Numbers>): Numbers {
-    const message = { ...baseNumbers } as Numbers;
-    if (object.double !== undefined && object.double !== null) {
-      message.double = object.double;
-    } else {
-      message.double = 0;
-    }
-    if (object.float !== undefined && object.float !== null) {
-      message.float = object.float;
-    } else {
-      message.float = 0;
-    }
-    if (object.int32 !== undefined && object.int32 !== null) {
-      message.int32 = object.int32;
-    } else {
-      message.int32 = 0;
-    }
-    if (object.int64 !== undefined && object.int64 !== null) {
-      message.int64 = object.int64;
-    } else {
-      message.int64 = '0';
-    }
-    if (object.uint32 !== undefined && object.uint32 !== null) {
-      message.uint32 = object.uint32;
-    } else {
-      message.uint32 = 0;
-    }
-    if (object.uint64 !== undefined && object.uint64 !== null) {
-      message.uint64 = object.uint64;
-    } else {
-      message.uint64 = '0';
-    }
-    if (object.sint32 !== undefined && object.sint32 !== null) {
-      message.sint32 = object.sint32;
-    } else {
-      message.sint32 = 0;
-    }
-    if (object.sint64 !== undefined && object.sint64 !== null) {
-      message.sint64 = object.sint64;
-    } else {
-      message.sint64 = '0';
-    }
-    if (object.fixed32 !== undefined && object.fixed32 !== null) {
-      message.fixed32 = object.fixed32;
-    } else {
-      message.fixed32 = 0;
-    }
-    if (object.fixed64 !== undefined && object.fixed64 !== null) {
-      message.fixed64 = object.fixed64;
-    } else {
-      message.fixed64 = '0';
-    }
-    if (object.sfixed32 !== undefined && object.sfixed32 !== null) {
-      message.sfixed32 = object.sfixed32;
-    } else {
-      message.sfixed32 = 0;
-    }
-    if (object.sfixed64 !== undefined && object.sfixed64 !== null) {
-      message.sfixed64 = object.sfixed64;
-    } else {
-      message.sfixed64 = '0';
-    }
-    if (object.guint64 !== undefined && object.guint64 !== null) {
-      message.guint64 = object.guint64;
-    } else {
-      message.guint64 = undefined;
-    }
-    if (object.timestamp !== undefined && object.timestamp !== null) {
-      message.timestamp = object.timestamp;
-    } else {
-      message.timestamp = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Numbers>, I>>(object: I): Numbers {
+    const message = createBaseNumbers();
+    message.double = object.double ?? 0;
+    message.float = object.float ?? 0;
+    message.int32 = object.int32 ?? 0;
+    message.int64 = object.int64 ?? '0';
+    message.uint32 = object.uint32 ?? 0;
+    message.uint64 = object.uint64 ?? '0';
+    message.sint32 = object.sint32 ?? 0;
+    message.sint64 = object.sint64 ?? '0';
+    message.fixed32 = object.fixed32 ?? 0;
+    message.fixed64 = object.fixed64 ?? '0';
+    message.sfixed32 = object.sfixed32 ?? 0;
+    message.sfixed64 = object.sfixed64 ?? '0';
+    message.guint64 = object.guint64 ?? undefined;
+    message.timestamp = object.timestamp ?? undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -322,6 +215,11 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 function toTimestamp(date: Date): Timestamp {
   const seconds = Math.trunc(date.getTime() / 1_000).toString();
@@ -354,4 +252,8 @@ function longToString(long: Long) {
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

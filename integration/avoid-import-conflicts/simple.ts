@@ -58,7 +58,9 @@ export interface SimpleEnums {
   importEnum: SimpleEnum1;
 }
 
-const baseSimple: object = { name: '' };
+function createBaseSimple(): Simple {
+  return { name: '', otherSimple: undefined };
+}
 
 export const Simple = {
   encode(message: Simple, writer: Writer = Writer.create()): Writer {
@@ -74,7 +76,7 @@ export const Simple = {
   decode(input: Reader | Uint8Array, length?: number): Simple {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseSimple } as Simple;
+    const message = createBaseSimple();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -93,18 +95,10 @@ export const Simple = {
   },
 
   fromJSON(object: any): Simple {
-    const message = { ...baseSimple } as Simple;
-    if (object.name !== undefined && object.name !== null) {
-      message.name = String(object.name);
-    } else {
-      message.name = '';
-    }
-    if (object.otherSimple !== undefined && object.otherSimple !== null) {
-      message.otherSimple = Simple2.fromJSON(object.otherSimple);
-    } else {
-      message.otherSimple = undefined;
-    }
-    return message;
+    return {
+      name: isSet(object.name) ? String(object.name) : '',
+      otherSimple: isSet(object.otherSimple) ? Simple2.fromJSON(object.otherSimple) : undefined,
+    };
   },
 
   toJSON(message: Simple): unknown {
@@ -115,23 +109,20 @@ export const Simple = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Simple>): Simple {
-    const message = { ...baseSimple } as Simple;
-    if (object.name !== undefined && object.name !== null) {
-      message.name = object.name;
-    } else {
-      message.name = '';
-    }
-    if (object.otherSimple !== undefined && object.otherSimple !== null) {
-      message.otherSimple = Simple2.fromPartial(object.otherSimple);
-    } else {
-      message.otherSimple = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Simple>, I>>(object: I): Simple {
+    const message = createBaseSimple();
+    message.name = object.name ?? '';
+    message.otherSimple =
+      object.otherSimple !== undefined && object.otherSimple !== null
+        ? Simple2.fromPartial(object.otherSimple)
+        : undefined;
     return message;
   },
 };
 
-const baseSimpleEnums: object = { localEnum: 0, importEnum: 0 };
+function createBaseSimpleEnums(): SimpleEnums {
+  return { localEnum: 0, importEnum: 0 };
+}
 
 export const SimpleEnums = {
   encode(message: SimpleEnums, writer: Writer = Writer.create()): Writer {
@@ -147,7 +138,7 @@ export const SimpleEnums = {
   decode(input: Reader | Uint8Array, length?: number): SimpleEnums {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseSimpleEnums } as SimpleEnums;
+    const message = createBaseSimpleEnums();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -166,18 +157,10 @@ export const SimpleEnums = {
   },
 
   fromJSON(object: any): SimpleEnums {
-    const message = { ...baseSimpleEnums } as SimpleEnums;
-    if (object.localEnum !== undefined && object.localEnum !== null) {
-      message.localEnum = simpleEnumFromJSON(object.localEnum);
-    } else {
-      message.localEnum = 0;
-    }
-    if (object.importEnum !== undefined && object.importEnum !== null) {
-      message.importEnum = simpleEnumFromJSON3(object.importEnum);
-    } else {
-      message.importEnum = 0;
-    }
-    return message;
+    return {
+      localEnum: isSet(object.localEnum) ? simpleEnumFromJSON(object.localEnum) : 0,
+      importEnum: isSet(object.importEnum) ? simpleEnumFromJSON3(object.importEnum) : 0,
+    };
   },
 
   toJSON(message: SimpleEnums): unknown {
@@ -187,23 +170,16 @@ export const SimpleEnums = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<SimpleEnums>): SimpleEnums {
-    const message = { ...baseSimpleEnums } as SimpleEnums;
-    if (object.localEnum !== undefined && object.localEnum !== null) {
-      message.localEnum = object.localEnum;
-    } else {
-      message.localEnum = 0;
-    }
-    if (object.importEnum !== undefined && object.importEnum !== null) {
-      message.importEnum = object.importEnum;
-    } else {
-      message.importEnum = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<SimpleEnums>, I>>(object: I): SimpleEnums {
+    const message = createBaseSimpleEnums();
+    message.localEnum = object.localEnum ?? 0;
+    message.importEnum = object.importEnum ?? 0;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -214,9 +190,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

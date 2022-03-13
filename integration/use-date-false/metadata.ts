@@ -9,7 +9,9 @@ export interface Metadata {
   lastEdited: Timestamp | undefined;
 }
 
-const baseMetadata: object = {};
+function createBaseMetadata(): Metadata {
+  return { lastEdited: undefined };
+}
 
 export const Metadata = {
   encode(message: Metadata, writer: Writer = Writer.create()): Writer {
@@ -22,7 +24,7 @@ export const Metadata = {
   decode(input: Reader | Uint8Array, length?: number): Metadata {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseMetadata } as Metadata;
+    const message = createBaseMetadata();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -38,13 +40,9 @@ export const Metadata = {
   },
 
   fromJSON(object: any): Metadata {
-    const message = { ...baseMetadata } as Metadata;
-    if (object.lastEdited !== undefined && object.lastEdited !== null) {
-      message.lastEdited = fromJsonTimestamp(object.lastEdited);
-    } else {
-      message.lastEdited = undefined;
-    }
-    return message;
+    return {
+      lastEdited: isSet(object.lastEdited) ? fromJsonTimestamp(object.lastEdited) : undefined,
+    };
   },
 
   toJSON(message: Metadata): unknown {
@@ -53,18 +51,18 @@ export const Metadata = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Metadata>): Metadata {
-    const message = { ...baseMetadata } as Metadata;
-    if (object.lastEdited !== undefined && object.lastEdited !== null) {
-      message.lastEdited = Timestamp.fromPartial(object.lastEdited);
-    } else {
-      message.lastEdited = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Metadata>, I>>(object: I): Metadata {
+    const message = createBaseMetadata();
+    message.lastEdited =
+      object.lastEdited !== undefined && object.lastEdited !== null
+        ? Timestamp.fromPartial(object.lastEdited)
+        : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -74,6 +72,11 @@ export type DeepPartial<T> = T extends Builtin
   : T extends {}
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
+
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
 
 function toTimestamp(date: Date): Timestamp {
   const seconds = date.getTime() / 1_000;
@@ -102,4 +105,8 @@ function fromJsonTimestamp(o: any): Timestamp {
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

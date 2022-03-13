@@ -14,7 +14,9 @@ export interface Area {
   se: Point | undefined;
 }
 
-const basePoint: object = { lat: 0, lng: 0 };
+function createBasePoint(): Point {
+  return { lat: 0, lng: 0 };
+}
 
 export const Point = {
   encode(message: Point, writer: Writer = Writer.create()): Writer {
@@ -30,7 +32,7 @@ export const Point = {
   decode(input: Reader | Uint8Array, length?: number): Point {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...basePoint } as Point;
+    const message = createBasePoint();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -49,18 +51,10 @@ export const Point = {
   },
 
   fromJSON(object: any): Point {
-    const message = { ...basePoint } as Point;
-    if (object.lat !== undefined && object.lat !== null) {
-      message.lat = Number(object.lat);
-    } else {
-      message.lat = 0;
-    }
-    if (object.lng !== undefined && object.lng !== null) {
-      message.lng = Number(object.lng);
-    } else {
-      message.lng = 0;
-    }
-    return message;
+    return {
+      lat: isSet(object.lat) ? Number(object.lat) : 0,
+      lng: isSet(object.lng) ? Number(object.lng) : 0,
+    };
   },
 
   toJSON(message: Point): unknown {
@@ -70,23 +64,17 @@ export const Point = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Point>): Point {
-    const message = { ...basePoint } as Point;
-    if (object.lat !== undefined && object.lat !== null) {
-      message.lat = object.lat;
-    } else {
-      message.lat = 0;
-    }
-    if (object.lng !== undefined && object.lng !== null) {
-      message.lng = object.lng;
-    } else {
-      message.lng = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<Point>, I>>(object: I): Point {
+    const message = createBasePoint();
+    message.lat = object.lat ?? 0;
+    message.lng = object.lng ?? 0;
     return message;
   },
 };
 
-const baseArea: object = {};
+function createBaseArea(): Area {
+  return { nw: undefined, se: undefined };
+}
 
 export const Area = {
   encode(message: Area, writer: Writer = Writer.create()): Writer {
@@ -102,7 +90,7 @@ export const Area = {
   decode(input: Reader | Uint8Array, length?: number): Area {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseArea } as Area;
+    const message = createBaseArea();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -121,18 +109,10 @@ export const Area = {
   },
 
   fromJSON(object: any): Area {
-    const message = { ...baseArea } as Area;
-    if (object.nw !== undefined && object.nw !== null) {
-      message.nw = Point.fromJSON(object.nw);
-    } else {
-      message.nw = undefined;
-    }
-    if (object.se !== undefined && object.se !== null) {
-      message.se = Point.fromJSON(object.se);
-    } else {
-      message.se = undefined;
-    }
-    return message;
+    return {
+      nw: isSet(object.nw) ? Point.fromJSON(object.nw) : undefined,
+      se: isSet(object.se) ? Point.fromJSON(object.se) : undefined,
+    };
   },
 
   toJSON(message: Area): unknown {
@@ -142,23 +122,16 @@ export const Area = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Area>): Area {
-    const message = { ...baseArea } as Area;
-    if (object.nw !== undefined && object.nw !== null) {
-      message.nw = Point.fromPartial(object.nw);
-    } else {
-      message.nw = undefined;
-    }
-    if (object.se !== undefined && object.se !== null) {
-      message.se = Point.fromPartial(object.se);
-    } else {
-      message.se = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Area>, I>>(object: I): Area {
+    const message = createBaseArea();
+    message.nw = object.nw !== undefined && object.nw !== null ? Point.fromPartial(object.nw) : undefined;
+    message.se = object.se !== undefined && object.se !== null ? Point.fromPartial(object.se) : undefined;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -169,9 +142,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

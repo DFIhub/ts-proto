@@ -10,7 +10,9 @@ export interface Baz {
 
 export interface FooBar {}
 
-const baseBaz: object = {};
+function createBaseBaz(): Baz {
+  return { foo: undefined };
+}
 
 export const Baz = {
   encode(message: Baz, writer: Writer = Writer.create()): Writer {
@@ -23,7 +25,7 @@ export const Baz = {
   decode(input: Reader | Uint8Array, length?: number): Baz {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseBaz } as Baz;
+    const message = createBaseBaz();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -39,13 +41,9 @@ export const Baz = {
   },
 
   fromJSON(object: any): Baz {
-    const message = { ...baseBaz } as Baz;
-    if (object.foo !== undefined && object.foo !== null) {
-      message.foo = FooBar.fromJSON(object.foo);
-    } else {
-      message.foo = undefined;
-    }
-    return message;
+    return {
+      foo: isSet(object.foo) ? FooBar.fromJSON(object.foo) : undefined,
+    };
   },
 
   toJSON(message: Baz): unknown {
@@ -54,18 +52,16 @@ export const Baz = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Baz>): Baz {
-    const message = { ...baseBaz } as Baz;
-    if (object.foo !== undefined && object.foo !== null) {
-      message.foo = FooBar.fromPartial(object.foo);
-    } else {
-      message.foo = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Baz>, I>>(object: I): Baz {
+    const message = createBaseBaz();
+    message.foo = object.foo !== undefined && object.foo !== null ? FooBar.fromPartial(object.foo) : undefined;
     return message;
   },
 };
 
-const baseFooBar: object = {};
+function createBaseFooBar(): FooBar {
+  return {};
+}
 
 export const FooBar = {
   encode(_: FooBar, writer: Writer = Writer.create()): Writer {
@@ -75,7 +71,7 @@ export const FooBar = {
   decode(input: Reader | Uint8Array, length?: number): FooBar {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseFooBar } as FooBar;
+    const message = createBaseFooBar();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -88,8 +84,7 @@ export const FooBar = {
   },
 
   fromJSON(_: any): FooBar {
-    const message = { ...baseFooBar } as FooBar;
-    return message;
+    return {};
   },
 
   toJSON(_: FooBar): unknown {
@@ -97,13 +92,14 @@ export const FooBar = {
     return obj;
   },
 
-  fromPartial(_: DeepPartial<FooBar>): FooBar {
-    const message = { ...baseFooBar } as FooBar;
+  fromPartial<I extends Exact<DeepPartial<FooBar>, I>>(_: I): FooBar {
+    const message = createBaseFooBar();
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -114,9 +110,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

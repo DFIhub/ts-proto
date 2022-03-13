@@ -1,7 +1,8 @@
 /* eslint-disable */
-import { util, configure, Reader, Writer } from 'protobufjs/minimal';
+import { util, configure, Writer, Reader } from 'protobufjs/minimal';
 import * as Long from 'long';
 import { Observable } from 'rxjs';
+import { map } from 'rxjs/operators';
 
 export const protobufPackage = 'rpx';
 
@@ -91,7 +92,9 @@ export interface DashAPICredsDeleteReq {
 
 export interface Empty {}
 
-const baseDashFlash: object = { msg: '', type: 0 };
+function createBaseDashFlash(): DashFlash {
+  return { msg: '', type: 0 };
+}
 
 export const DashFlash = {
   encode(message: DashFlash, writer: Writer = Writer.create()): Writer {
@@ -107,7 +110,7 @@ export const DashFlash = {
   decode(input: Reader | Uint8Array, length?: number): DashFlash {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashFlash } as DashFlash;
+    const message = createBaseDashFlash();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -126,18 +129,10 @@ export const DashFlash = {
   },
 
   fromJSON(object: any): DashFlash {
-    const message = { ...baseDashFlash } as DashFlash;
-    if (object.msg !== undefined && object.msg !== null) {
-      message.msg = String(object.msg);
-    } else {
-      message.msg = '';
-    }
-    if (object.type !== undefined && object.type !== null) {
-      message.type = dashFlash_TypeFromJSON(object.type);
-    } else {
-      message.type = 0;
-    }
-    return message;
+    return {
+      msg: isSet(object.msg) ? String(object.msg) : '',
+      type: isSet(object.type) ? dashFlash_TypeFromJSON(object.type) : 0,
+    };
   },
 
   toJSON(message: DashFlash): unknown {
@@ -147,23 +142,17 @@ export const DashFlash = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashFlash>): DashFlash {
-    const message = { ...baseDashFlash } as DashFlash;
-    if (object.msg !== undefined && object.msg !== null) {
-      message.msg = object.msg;
-    } else {
-      message.msg = '';
-    }
-    if (object.type !== undefined && object.type !== null) {
-      message.type = object.type;
-    } else {
-      message.type = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<DashFlash>, I>>(object: I): DashFlash {
+    const message = createBaseDashFlash();
+    message.msg = object.msg ?? '';
+    message.type = object.type ?? 0;
     return message;
   },
 };
 
-const baseDashUserSettingsState: object = { email: '' };
+function createBaseDashUserSettingsState(): DashUserSettingsState {
+  return { email: '', urls: undefined, flashes: [] };
+}
 
 export const DashUserSettingsState = {
   encode(message: DashUserSettingsState, writer: Writer = Writer.create()): Writer {
@@ -182,8 +171,7 @@ export const DashUserSettingsState = {
   decode(input: Reader | Uint8Array, length?: number): DashUserSettingsState {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashUserSettingsState } as DashUserSettingsState;
-    message.flashes = [];
+    const message = createBaseDashUserSettingsState();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -205,24 +193,11 @@ export const DashUserSettingsState = {
   },
 
   fromJSON(object: any): DashUserSettingsState {
-    const message = { ...baseDashUserSettingsState } as DashUserSettingsState;
-    message.flashes = [];
-    if (object.email !== undefined && object.email !== null) {
-      message.email = String(object.email);
-    } else {
-      message.email = '';
-    }
-    if (object.urls !== undefined && object.urls !== null) {
-      message.urls = DashUserSettingsState_URLs.fromJSON(object.urls);
-    } else {
-      message.urls = undefined;
-    }
-    if (object.flashes !== undefined && object.flashes !== null) {
-      for (const e of object.flashes) {
-        message.flashes.push(DashFlash.fromJSON(e));
-      }
-    }
-    return message;
+    return {
+      email: isSet(object.email) ? String(object.email) : '',
+      urls: isSet(object.urls) ? DashUserSettingsState_URLs.fromJSON(object.urls) : undefined,
+      flashes: Array.isArray(object?.flashes) ? object.flashes.map((e: any) => DashFlash.fromJSON(e)) : [],
+    };
   },
 
   toJSON(message: DashUserSettingsState): unknown {
@@ -238,29 +213,21 @@ export const DashUserSettingsState = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashUserSettingsState>): DashUserSettingsState {
-    const message = { ...baseDashUserSettingsState } as DashUserSettingsState;
-    message.flashes = [];
-    if (object.email !== undefined && object.email !== null) {
-      message.email = object.email;
-    } else {
-      message.email = '';
-    }
-    if (object.urls !== undefined && object.urls !== null) {
-      message.urls = DashUserSettingsState_URLs.fromPartial(object.urls);
-    } else {
-      message.urls = undefined;
-    }
-    if (object.flashes !== undefined && object.flashes !== null) {
-      for (const e of object.flashes) {
-        message.flashes.push(DashFlash.fromPartial(e));
-      }
-    }
+  fromPartial<I extends Exact<DeepPartial<DashUserSettingsState>, I>>(object: I): DashUserSettingsState {
+    const message = createBaseDashUserSettingsState();
+    message.email = object.email ?? '';
+    message.urls =
+      object.urls !== undefined && object.urls !== null
+        ? DashUserSettingsState_URLs.fromPartial(object.urls)
+        : undefined;
+    message.flashes = object.flashes?.map((e) => DashFlash.fromPartial(e)) || [];
     return message;
   },
 };
 
-const baseDashUserSettingsState_URLs: object = { connectGoogle: '', connectGithub: '' };
+function createBaseDashUserSettingsState_URLs(): DashUserSettingsState_URLs {
+  return { connectGoogle: '', connectGithub: '' };
+}
 
 export const DashUserSettingsState_URLs = {
   encode(message: DashUserSettingsState_URLs, writer: Writer = Writer.create()): Writer {
@@ -276,7 +243,7 @@ export const DashUserSettingsState_URLs = {
   decode(input: Reader | Uint8Array, length?: number): DashUserSettingsState_URLs {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashUserSettingsState_URLs } as DashUserSettingsState_URLs;
+    const message = createBaseDashUserSettingsState_URLs();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -295,18 +262,10 @@ export const DashUserSettingsState_URLs = {
   },
 
   fromJSON(object: any): DashUserSettingsState_URLs {
-    const message = { ...baseDashUserSettingsState_URLs } as DashUserSettingsState_URLs;
-    if (object.connectGoogle !== undefined && object.connectGoogle !== null) {
-      message.connectGoogle = String(object.connectGoogle);
-    } else {
-      message.connectGoogle = '';
-    }
-    if (object.connectGithub !== undefined && object.connectGithub !== null) {
-      message.connectGithub = String(object.connectGithub);
-    } else {
-      message.connectGithub = '';
-    }
-    return message;
+    return {
+      connectGoogle: isSet(object.connectGoogle) ? String(object.connectGoogle) : '',
+      connectGithub: isSet(object.connectGithub) ? String(object.connectGithub) : '',
+    };
   },
 
   toJSON(message: DashUserSettingsState_URLs): unknown {
@@ -316,23 +275,17 @@ export const DashUserSettingsState_URLs = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashUserSettingsState_URLs>): DashUserSettingsState_URLs {
-    const message = { ...baseDashUserSettingsState_URLs } as DashUserSettingsState_URLs;
-    if (object.connectGoogle !== undefined && object.connectGoogle !== null) {
-      message.connectGoogle = object.connectGoogle;
-    } else {
-      message.connectGoogle = '';
-    }
-    if (object.connectGithub !== undefined && object.connectGithub !== null) {
-      message.connectGithub = object.connectGithub;
-    } else {
-      message.connectGithub = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<DashUserSettingsState_URLs>, I>>(object: I): DashUserSettingsState_URLs {
+    const message = createBaseDashUserSettingsState_URLs();
+    message.connectGoogle = object.connectGoogle ?? '';
+    message.connectGithub = object.connectGithub ?? '';
     return message;
   },
 };
 
-const baseDashCred: object = { description: '', metadata: '', token: '', id: '' };
+function createBaseDashCred(): DashCred {
+  return { description: '', metadata: '', token: '', id: '' };
+}
 
 export const DashCred = {
   encode(message: DashCred, writer: Writer = Writer.create()): Writer {
@@ -354,7 +307,7 @@ export const DashCred = {
   decode(input: Reader | Uint8Array, length?: number): DashCred {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashCred } as DashCred;
+    const message = createBaseDashCred();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -379,28 +332,12 @@ export const DashCred = {
   },
 
   fromJSON(object: any): DashCred {
-    const message = { ...baseDashCred } as DashCred;
-    if (object.description !== undefined && object.description !== null) {
-      message.description = String(object.description);
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = String(object.metadata);
-    } else {
-      message.metadata = '';
-    }
-    if (object.token !== undefined && object.token !== null) {
-      message.token = String(object.token);
-    } else {
-      message.token = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = String(object.id);
-    } else {
-      message.id = '';
-    }
-    return message;
+    return {
+      description: isSet(object.description) ? String(object.description) : '',
+      metadata: isSet(object.metadata) ? String(object.metadata) : '',
+      token: isSet(object.token) ? String(object.token) : '',
+      id: isSet(object.id) ? String(object.id) : '',
+    };
   },
 
   toJSON(message: DashCred): unknown {
@@ -412,33 +349,19 @@ export const DashCred = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashCred>): DashCred {
-    const message = { ...baseDashCred } as DashCred;
-    if (object.description !== undefined && object.description !== null) {
-      message.description = object.description;
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = object.metadata;
-    } else {
-      message.metadata = '';
-    }
-    if (object.token !== undefined && object.token !== null) {
-      message.token = object.token;
-    } else {
-      message.token = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = object.id;
-    } else {
-      message.id = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<DashCred>, I>>(object: I): DashCred {
+    const message = createBaseDashCred();
+    message.description = object.description ?? '';
+    message.metadata = object.metadata ?? '';
+    message.token = object.token ?? '';
+    message.id = object.id ?? '';
     return message;
   },
 };
 
-const baseDashAPICredsCreateReq: object = { description: '', metadata: '' };
+function createBaseDashAPICredsCreateReq(): DashAPICredsCreateReq {
+  return { description: '', metadata: '' };
+}
 
 export const DashAPICredsCreateReq = {
   encode(message: DashAPICredsCreateReq, writer: Writer = Writer.create()): Writer {
@@ -454,7 +377,7 @@ export const DashAPICredsCreateReq = {
   decode(input: Reader | Uint8Array, length?: number): DashAPICredsCreateReq {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashAPICredsCreateReq } as DashAPICredsCreateReq;
+    const message = createBaseDashAPICredsCreateReq();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -473,18 +396,10 @@ export const DashAPICredsCreateReq = {
   },
 
   fromJSON(object: any): DashAPICredsCreateReq {
-    const message = { ...baseDashAPICredsCreateReq } as DashAPICredsCreateReq;
-    if (object.description !== undefined && object.description !== null) {
-      message.description = String(object.description);
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = String(object.metadata);
-    } else {
-      message.metadata = '';
-    }
-    return message;
+    return {
+      description: isSet(object.description) ? String(object.description) : '',
+      metadata: isSet(object.metadata) ? String(object.metadata) : '',
+    };
   },
 
   toJSON(message: DashAPICredsCreateReq): unknown {
@@ -494,23 +409,17 @@ export const DashAPICredsCreateReq = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashAPICredsCreateReq>): DashAPICredsCreateReq {
-    const message = { ...baseDashAPICredsCreateReq } as DashAPICredsCreateReq;
-    if (object.description !== undefined && object.description !== null) {
-      message.description = object.description;
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = object.metadata;
-    } else {
-      message.metadata = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<DashAPICredsCreateReq>, I>>(object: I): DashAPICredsCreateReq {
+    const message = createBaseDashAPICredsCreateReq();
+    message.description = object.description ?? '';
+    message.metadata = object.metadata ?? '';
     return message;
   },
 };
 
-const baseDashAPICredsUpdateReq: object = { credSid: '', description: '', metadata: '', id: '' };
+function createBaseDashAPICredsUpdateReq(): DashAPICredsUpdateReq {
+  return { credSid: '', description: '', metadata: '', id: '' };
+}
 
 export const DashAPICredsUpdateReq = {
   encode(message: DashAPICredsUpdateReq, writer: Writer = Writer.create()): Writer {
@@ -532,7 +441,7 @@ export const DashAPICredsUpdateReq = {
   decode(input: Reader | Uint8Array, length?: number): DashAPICredsUpdateReq {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashAPICredsUpdateReq } as DashAPICredsUpdateReq;
+    const message = createBaseDashAPICredsUpdateReq();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -557,28 +466,12 @@ export const DashAPICredsUpdateReq = {
   },
 
   fromJSON(object: any): DashAPICredsUpdateReq {
-    const message = { ...baseDashAPICredsUpdateReq } as DashAPICredsUpdateReq;
-    if (object.credSid !== undefined && object.credSid !== null) {
-      message.credSid = String(object.credSid);
-    } else {
-      message.credSid = '';
-    }
-    if (object.description !== undefined && object.description !== null) {
-      message.description = String(object.description);
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = String(object.metadata);
-    } else {
-      message.metadata = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = String(object.id);
-    } else {
-      message.id = '';
-    }
-    return message;
+    return {
+      credSid: isSet(object.credSid) ? String(object.credSid) : '',
+      description: isSet(object.description) ? String(object.description) : '',
+      metadata: isSet(object.metadata) ? String(object.metadata) : '',
+      id: isSet(object.id) ? String(object.id) : '',
+    };
   },
 
   toJSON(message: DashAPICredsUpdateReq): unknown {
@@ -590,33 +483,19 @@ export const DashAPICredsUpdateReq = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashAPICredsUpdateReq>): DashAPICredsUpdateReq {
-    const message = { ...baseDashAPICredsUpdateReq } as DashAPICredsUpdateReq;
-    if (object.credSid !== undefined && object.credSid !== null) {
-      message.credSid = object.credSid;
-    } else {
-      message.credSid = '';
-    }
-    if (object.description !== undefined && object.description !== null) {
-      message.description = object.description;
-    } else {
-      message.description = '';
-    }
-    if (object.metadata !== undefined && object.metadata !== null) {
-      message.metadata = object.metadata;
-    } else {
-      message.metadata = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = object.id;
-    } else {
-      message.id = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<DashAPICredsUpdateReq>, I>>(object: I): DashAPICredsUpdateReq {
+    const message = createBaseDashAPICredsUpdateReq();
+    message.credSid = object.credSid ?? '';
+    message.description = object.description ?? '';
+    message.metadata = object.metadata ?? '';
+    message.id = object.id ?? '';
     return message;
   },
 };
 
-const baseDashAPICredsDeleteReq: object = { credSid: '', id: '' };
+function createBaseDashAPICredsDeleteReq(): DashAPICredsDeleteReq {
+  return { credSid: '', id: '' };
+}
 
 export const DashAPICredsDeleteReq = {
   encode(message: DashAPICredsDeleteReq, writer: Writer = Writer.create()): Writer {
@@ -632,7 +511,7 @@ export const DashAPICredsDeleteReq = {
   decode(input: Reader | Uint8Array, length?: number): DashAPICredsDeleteReq {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDashAPICredsDeleteReq } as DashAPICredsDeleteReq;
+    const message = createBaseDashAPICredsDeleteReq();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -651,18 +530,10 @@ export const DashAPICredsDeleteReq = {
   },
 
   fromJSON(object: any): DashAPICredsDeleteReq {
-    const message = { ...baseDashAPICredsDeleteReq } as DashAPICredsDeleteReq;
-    if (object.credSid !== undefined && object.credSid !== null) {
-      message.credSid = String(object.credSid);
-    } else {
-      message.credSid = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = String(object.id);
-    } else {
-      message.id = '';
-    }
-    return message;
+    return {
+      credSid: isSet(object.credSid) ? String(object.credSid) : '',
+      id: isSet(object.id) ? String(object.id) : '',
+    };
   },
 
   toJSON(message: DashAPICredsDeleteReq): unknown {
@@ -672,23 +543,17 @@ export const DashAPICredsDeleteReq = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DashAPICredsDeleteReq>): DashAPICredsDeleteReq {
-    const message = { ...baseDashAPICredsDeleteReq } as DashAPICredsDeleteReq;
-    if (object.credSid !== undefined && object.credSid !== null) {
-      message.credSid = object.credSid;
-    } else {
-      message.credSid = '';
-    }
-    if (object.id !== undefined && object.id !== null) {
-      message.id = object.id;
-    } else {
-      message.id = '';
-    }
+  fromPartial<I extends Exact<DeepPartial<DashAPICredsDeleteReq>, I>>(object: I): DashAPICredsDeleteReq {
+    const message = createBaseDashAPICredsDeleteReq();
+    message.credSid = object.credSid ?? '';
+    message.id = object.id ?? '';
     return message;
   },
 };
 
-const baseEmpty: object = {};
+function createBaseEmpty(): Empty {
+  return {};
+}
 
 export const Empty = {
   encode(_: Empty, writer: Writer = Writer.create()): Writer {
@@ -698,7 +563,7 @@ export const Empty = {
   decode(input: Reader | Uint8Array, length?: number): Empty {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseEmpty } as Empty;
+    const message = createBaseEmpty();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -711,8 +576,7 @@ export const Empty = {
   },
 
   fromJSON(_: any): Empty {
-    const message = { ...baseEmpty } as Empty;
-    return message;
+    return {};
   },
 
   toJSON(_: Empty): unknown {
@@ -720,8 +584,8 @@ export const Empty = {
     return obj;
   },
 
-  fromPartial(_: DeepPartial<Empty>): Empty {
-    const message = { ...baseEmpty } as Empty;
+  fromPartial<I extends Exact<DeepPartial<Empty>, I>>(_: I): Empty {
+    const message = createBaseEmpty();
     return message;
   },
 };
@@ -744,10 +608,10 @@ export class DashStateClientImpl implements DashState {
     return promise.then((data) => DashUserSettingsState.decode(new Reader(data)));
   }
 
-  ActiveUserSettingsStream(request: Empty): Promise<DashUserSettingsState> {
+  ActiveUserSettingsStream(request: Empty): Observable<DashUserSettingsState> {
     const data = Empty.encode(request).finish();
-    const promise = this.rpc.request('rpx.DashState', 'ActiveUserSettingsStream', data);
-    return promise.then((data) => DashUserSettingsState.decode(new Reader(data)));
+    const result = this.rpc.serverStreamingRequest('rpx.DashState', 'ActiveUserSettingsStream', data);
+    return result.pipe(map((data) => DashUserSettingsState.decode(new Reader(data))));
   }
 }
 
@@ -791,9 +655,13 @@ export class DashAPICredsClientImpl implements DashAPICreds {
 
 interface Rpc {
   request(service: string, method: string, data: Uint8Array): Promise<Uint8Array>;
+  clientStreamingRequest(service: string, method: string, data: Observable<Uint8Array>): Promise<Uint8Array>;
+  serverStreamingRequest(service: string, method: string, data: Uint8Array): Observable<Uint8Array>;
+  bidirectionalStreamingRequest(service: string, method: string, data: Observable<Uint8Array>): Observable<Uint8Array>;
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -804,9 +672,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

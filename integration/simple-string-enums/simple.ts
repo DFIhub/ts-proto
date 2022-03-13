@@ -1,6 +1,7 @@
 /* eslint-disable */
 import { util, configure, Writer, Reader } from 'protobufjs/minimal';
 import * as Long from 'long';
+import { NullValue, nullValueToNumber, nullValueFromJSON, nullValueToJSON } from './google/protobuf/struct';
 
 export const protobufPackage = 'simple';
 
@@ -59,9 +60,12 @@ export interface Simple {
   name: string;
   state: StateEnum;
   states: StateEnum[];
+  nullValue: NullValue;
 }
 
-const baseSimple: object = { name: '', state: StateEnum.UNKNOWN, states: StateEnum.UNKNOWN };
+function createBaseSimple(): Simple {
+  return { name: '', state: StateEnum.UNKNOWN, states: [], nullValue: NullValue.NULL_VALUE };
+}
 
 export const Simple = {
   encode(message: Simple, writer: Writer = Writer.create()): Writer {
@@ -76,14 +80,16 @@ export const Simple = {
       writer.int32(stateEnumToNumber(v));
     }
     writer.ldelim();
+    if (message.nullValue !== NullValue.NULL_VALUE) {
+      writer.uint32(48).int32(nullValueToNumber(message.nullValue));
+    }
     return writer;
   },
 
   decode(input: Reader | Uint8Array, length?: number): Simple {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseSimple } as Simple;
-    message.states = [];
+    const message = createBaseSimple();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -103,6 +109,9 @@ export const Simple = {
             message.states.push(stateEnumFromJSON(reader.int32()));
           }
           break;
+        case 6:
+          message.nullValue = nullValueFromJSON(reader.int32());
+          break;
         default:
           reader.skipType(tag & 7);
           break;
@@ -112,24 +121,12 @@ export const Simple = {
   },
 
   fromJSON(object: any): Simple {
-    const message = { ...baseSimple } as Simple;
-    message.states = [];
-    if (object.name !== undefined && object.name !== null) {
-      message.name = String(object.name);
-    } else {
-      message.name = '';
-    }
-    if (object.state !== undefined && object.state !== null) {
-      message.state = stateEnumFromJSON(object.state);
-    } else {
-      message.state = StateEnum.UNKNOWN;
-    }
-    if (object.states !== undefined && object.states !== null) {
-      for (const e of object.states) {
-        message.states.push(stateEnumFromJSON(e));
-      }
-    }
-    return message;
+    return {
+      name: isSet(object.name) ? String(object.name) : '',
+      state: isSet(object.state) ? stateEnumFromJSON(object.state) : StateEnum.UNKNOWN,
+      states: Array.isArray(object?.states) ? object.states.map((e: any) => stateEnumFromJSON(e)) : [],
+      nullValue: isSet(object.nullValue) ? nullValueFromJSON(object.nullValue) : NullValue.NULL_VALUE,
+    };
   },
 
   toJSON(message: Simple): unknown {
@@ -141,32 +138,22 @@ export const Simple = {
     } else {
       obj.states = [];
     }
+    message.nullValue !== undefined && (obj.nullValue = nullValueToJSON(message.nullValue));
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Simple>): Simple {
-    const message = { ...baseSimple } as Simple;
-    message.states = [];
-    if (object.name !== undefined && object.name !== null) {
-      message.name = object.name;
-    } else {
-      message.name = '';
-    }
-    if (object.state !== undefined && object.state !== null) {
-      message.state = object.state;
-    } else {
-      message.state = StateEnum.UNKNOWN;
-    }
-    if (object.states !== undefined && object.states !== null) {
-      for (const e of object.states) {
-        message.states.push(e);
-      }
-    }
+  fromPartial<I extends Exact<DeepPartial<Simple>, I>>(object: I): Simple {
+    const message = createBaseSimple();
+    message.name = object.name ?? '';
+    message.state = object.state ?? StateEnum.UNKNOWN;
+    message.states = object.states?.map((e) => e) || [];
+    message.nullValue = object.nullValue ?? NullValue.NULL_VALUE;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -177,9 +164,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

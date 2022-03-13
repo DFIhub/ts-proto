@@ -11,7 +11,9 @@ export interface Bar {
   foo: Foo | undefined;
 }
 
-const baseBar: object = { $type: 'foo.bar.Bar' };
+function createBaseBar(): Bar {
+  return { $type: 'foo.bar.Bar', foo: undefined };
+}
 
 export const Bar = {
   $type: 'foo.bar.Bar' as const,
@@ -26,7 +28,7 @@ export const Bar = {
   decode(input: Reader | Uint8Array, length?: number): Bar {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseBar } as Bar;
+    const message = createBaseBar();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -42,13 +44,10 @@ export const Bar = {
   },
 
   fromJSON(object: any): Bar {
-    const message = { ...baseBar } as Bar;
-    if (object.foo !== undefined && object.foo !== null) {
-      message.foo = Foo.fromJSON(object.foo);
-    } else {
-      message.foo = undefined;
-    }
-    return message;
+    return {
+      $type: Bar.$type,
+      foo: isSet(object.foo) ? Foo.fromJSON(object.foo) : undefined,
+    };
   },
 
   toJSON(message: Bar): unknown {
@@ -57,13 +56,9 @@ export const Bar = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Bar>): Bar {
-    const message = { ...baseBar } as Bar;
-    if (object.foo !== undefined && object.foo !== null) {
-      message.foo = Foo.fromPartial(object.foo);
-    } else {
-      message.foo = undefined;
-    }
+  fromPartial<I extends Exact<DeepPartial<Bar>, I>>(object: I): Bar {
+    const message = createBaseBar();
+    message.foo = object.foo !== undefined && object.foo !== null ? Foo.fromPartial(object.foo) : undefined;
     return message;
   },
 };
@@ -71,6 +66,7 @@ export const Bar = {
 messageTypeRegistry.set(Bar.$type, Bar);
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -81,9 +77,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in Exclude<keyof T, '$type'>]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P> | '$type'>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

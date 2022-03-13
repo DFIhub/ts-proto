@@ -1,4 +1,4 @@
-import { Child_Type, Simple, SimpleWithWrappers, StateEnum, SimpleWithMap, OneOfMessage } from './simple';
+import { Child_Type, Simple, SimpleWithWrappers, StateEnum, SimpleWithMap, OneOfMessage, Numbers } from './simple';
 import { google, simple as pbjs } from './pbjs';
 import ISimple = pbjs.ISimple;
 import PbChild = pbjs.Child;
@@ -190,7 +190,9 @@ describe('simple json', () => {
         "intLookup": Object {
           "1": 0,
         },
+        "longLookup": Object {},
         "mapOfBytes": Object {},
+        "mapOfStringValues": Object {},
         "mapOfTimestamps": Object {},
         "nameLookup": Object {},
       }
@@ -211,7 +213,9 @@ describe('simple json', () => {
       Object {
         "entitiesById": Object {},
         "intLookup": Object {},
+        "longLookup": Object {},
         "mapOfBytes": Object {},
+        "mapOfStringValues": Object {},
         "mapOfTimestamps": Object {
           "a": 1970-01-01T00:16:40.000Z,
           "b": 1970-01-01T00:33:20.000Z,
@@ -233,16 +237,20 @@ describe('simple json', () => {
         a: new Uint8Array([1, 2]),
         b: new Uint8Array([1, 2, 3]),
       },
+      mapOfStringValues: {},
+      longLookup: {},
     };
     const json = SimpleWithMap.toJSON(s1);
     expect(json).toMatchInlineSnapshot(`
       Object {
         "entitiesById": Object {},
         "intLookup": Object {},
+        "longLookup": Object {},
         "mapOfBytes": Object {
           "a": "AQI=",
           "b": "AQID",
         },
+        "mapOfStringValues": Object {},
         "mapOfTimestamps": Object {},
         "nameLookup": Object {},
       }
@@ -261,6 +269,7 @@ describe('simple json', () => {
       Object {
         "entitiesById": Object {},
         "intLookup": Object {},
+        "longLookup": Object {},
         "mapOfBytes": Object {
           "a": Uint8Array [
             1,
@@ -272,6 +281,7 @@ describe('simple json', () => {
             3,
           ],
         },
+        "mapOfStringValues": Object {},
         "mapOfTimestamps": Object {},
         "nameLookup": Object {},
       }
@@ -428,6 +438,39 @@ describe('simple json', () => {
     expect(OneOfMessage.toJSON(s1)).toMatchInlineSnapshot(`
       Object {
         "first": "first",
+      }
+    `);
+  });
+
+  it('rounds numbers', () => {
+    const n1: Numbers = {
+      double: 1.1,
+      fixed32: 1.1,
+      fixed64: 1.1,
+      float: 1.1,
+      int32: 1.1,
+      int64: 1.1,
+      sfixed32: 1.1,
+      sfixed64: 1.1,
+      sint32: 1.1,
+      sint64: 1.1,
+      uint32: 1.1,
+      uint64: 1.1,
+    };
+    expect(Numbers.toJSON(n1)).toMatchInlineSnapshot(`
+      Object {
+        "double": 1.1,
+        "fixed32": 1,
+        "fixed64": 1,
+        "float": 1.1,
+        "int32": 1,
+        "int64": 1,
+        "sfixed32": 1,
+        "sfixed64": 1,
+        "sint32": 1,
+        "sint64": 1,
+        "uint32": 1,
+        "uint64": 1,
       }
     `);
   });

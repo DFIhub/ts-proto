@@ -67,7 +67,9 @@ export function dividerData_DividerTypeToNumber(object: DividerData_DividerType)
   }
 }
 
-const baseDividerData: object = { type: DividerData_DividerType.DOUBLE };
+function createBaseDividerData(): DividerData {
+  return { type: DividerData_DividerType.DOUBLE };
+}
 
 export const DividerData = {
   encode(message: DividerData, writer: Writer = Writer.create()): Writer {
@@ -80,7 +82,7 @@ export const DividerData = {
   decode(input: Reader | Uint8Array, length?: number): DividerData {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseDividerData } as DividerData;
+    const message = createBaseDividerData();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -96,13 +98,9 @@ export const DividerData = {
   },
 
   fromJSON(object: any): DividerData {
-    const message = { ...baseDividerData } as DividerData;
-    if (object.type !== undefined && object.type !== null) {
-      message.type = dividerData_DividerTypeFromJSON(object.type);
-    } else {
-      message.type = DividerData_DividerType.DOUBLE;
-    }
-    return message;
+    return {
+      type: isSet(object.type) ? dividerData_DividerTypeFromJSON(object.type) : DividerData_DividerType.DOUBLE,
+    };
   },
 
   toJSON(message: DividerData): unknown {
@@ -111,18 +109,15 @@ export const DividerData = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<DividerData>): DividerData {
-    const message = { ...baseDividerData } as DividerData;
-    if (object.type !== undefined && object.type !== null) {
-      message.type = object.type;
-    } else {
-      message.type = DividerData_DividerType.DOUBLE;
-    }
+  fromPartial<I extends Exact<DeepPartial<DividerData>, I>>(object: I): DividerData {
+    const message = createBaseDividerData();
+    message.type = object.type ?? DividerData_DividerType.DOUBLE;
     return message;
   },
 };
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -133,9 +128,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }

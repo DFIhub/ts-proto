@@ -1,5 +1,11 @@
-import { code, Code } from 'ts-poet';
-import { CodeGeneratorRequest, FileDescriptorProto, MethodDescriptorProto, MethodOptions } from 'ts-proto-descriptors';
+import { code, Code, imp, Import } from 'ts-poet';
+import {
+  CodeGeneratorRequest,
+  FieldDescriptorProto,
+  FileDescriptorProto,
+  MethodDescriptorProto,
+  MethodOptions,
+} from 'ts-proto-descriptors';
 import ReadStream = NodeJS.ReadStream;
 import { SourceDescription } from './sourceInfo';
 import { Options, ServiceOption } from './options';
@@ -160,10 +166,38 @@ export class FormattedMethodDescriptor implements MethodDescriptorProto {
   public static formatName(methodName: string, options: Options) {
     let result = methodName;
 
-    if (options.lowerCaseServiceMethods || options.outputServices === ServiceOption.GRPC) {
+    if (options.lowerCaseServiceMethods || options.outputServices.includes(ServiceOption.GRPC)) {
       result = camelCase(result);
     }
 
     return result;
   }
+}
+
+export function getFieldJsonName(field: FieldDescriptorProto, options: Options): string {
+  // jsonName will be camelCased by the protocol compiler, plus can be overridden by the user,
+  // so just use that instead of our own maybeSnakeToCamel
+  if (options.snakeToCamel.includes('json')) {
+    return field.jsonName;
+  } else {
+    return field.name;
+  }
+}
+
+/**
+ * Returns a snippet for reading an object's property, such as `foo.bar`, or `foo['bar']` if the property name contains unusual characters.
+ * For simplicity, we don't match the ECMA 5/6 rules for valid identifiers exactly, and return array syntax liberally.
+ * @param objectName
+ * @param propertyName
+ * @param optional
+ */
+export function getPropertyAccessor(objectName: string, propertyName: string, optional: boolean = false): string {
+  let validIdentifier = /^[a-zA-Z_$][\w$]*$/;
+  return validIdentifier.test(propertyName)
+    ? `${objectName}${optional ? '?' : ''}.${propertyName}`
+    : `${objectName}${optional ? '?.' : ''}[${JSON.stringify(propertyName)}]`;
+}
+
+export function impProto(options: Options, module: string, type: string): Import {
+  return imp(`${type}@./${module}${options.fileSuffix}`);
 }

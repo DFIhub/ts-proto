@@ -1,5 +1,5 @@
 /* eslint-disable */
-import { util, configure, Reader, Writer } from 'protobufjs/minimal';
+import { util, configure, Writer, Reader } from 'protobufjs/minimal';
 import * as Long from 'long';
 import * as DataLoader from 'dataloader';
 import * as hash from 'object-hash';
@@ -19,7 +19,9 @@ export interface Numbers {
   num: number[];
 }
 
-const baseNumPair: object = { num1: 0, num2: 0 };
+function createBaseNumPair(): NumPair {
+  return { num1: 0, num2: 0 };
+}
 
 export const NumPair = {
   encode(message: NumPair, writer: Writer = Writer.create()): Writer {
@@ -35,7 +37,7 @@ export const NumPair = {
   decode(input: Reader | Uint8Array, length?: number): NumPair {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseNumPair } as NumPair;
+    const message = createBaseNumPair();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -54,18 +56,10 @@ export const NumPair = {
   },
 
   fromJSON(object: any): NumPair {
-    const message = { ...baseNumPair } as NumPair;
-    if (object.num1 !== undefined && object.num1 !== null) {
-      message.num1 = Number(object.num1);
-    } else {
-      message.num1 = 0;
-    }
-    if (object.num2 !== undefined && object.num2 !== null) {
-      message.num2 = Number(object.num2);
-    } else {
-      message.num2 = 0;
-    }
-    return message;
+    return {
+      num1: isSet(object.num1) ? Number(object.num1) : 0,
+      num2: isSet(object.num2) ? Number(object.num2) : 0,
+    };
   },
 
   toJSON(message: NumPair): unknown {
@@ -75,23 +69,17 @@ export const NumPair = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<NumPair>): NumPair {
-    const message = { ...baseNumPair } as NumPair;
-    if (object.num1 !== undefined && object.num1 !== null) {
-      message.num1 = object.num1;
-    } else {
-      message.num1 = 0;
-    }
-    if (object.num2 !== undefined && object.num2 !== null) {
-      message.num2 = object.num2;
-    } else {
-      message.num2 = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<NumPair>, I>>(object: I): NumPair {
+    const message = createBaseNumPair();
+    message.num1 = object.num1 ?? 0;
+    message.num2 = object.num2 ?? 0;
     return message;
   },
 };
 
-const baseNumSingle: object = { num: 0 };
+function createBaseNumSingle(): NumSingle {
+  return { num: 0 };
+}
 
 export const NumSingle = {
   encode(message: NumSingle, writer: Writer = Writer.create()): Writer {
@@ -104,7 +92,7 @@ export const NumSingle = {
   decode(input: Reader | Uint8Array, length?: number): NumSingle {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseNumSingle } as NumSingle;
+    const message = createBaseNumSingle();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -120,13 +108,9 @@ export const NumSingle = {
   },
 
   fromJSON(object: any): NumSingle {
-    const message = { ...baseNumSingle } as NumSingle;
-    if (object.num !== undefined && object.num !== null) {
-      message.num = Number(object.num);
-    } else {
-      message.num = 0;
-    }
-    return message;
+    return {
+      num: isSet(object.num) ? Number(object.num) : 0,
+    };
   },
 
   toJSON(message: NumSingle): unknown {
@@ -135,18 +119,16 @@ export const NumSingle = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<NumSingle>): NumSingle {
-    const message = { ...baseNumSingle } as NumSingle;
-    if (object.num !== undefined && object.num !== null) {
-      message.num = object.num;
-    } else {
-      message.num = 0;
-    }
+  fromPartial<I extends Exact<DeepPartial<NumSingle>, I>>(object: I): NumSingle {
+    const message = createBaseNumSingle();
+    message.num = object.num ?? 0;
     return message;
   },
 };
 
-const baseNumbers: object = { num: 0 };
+function createBaseNumbers(): Numbers {
+  return { num: [] };
+}
 
 export const Numbers = {
   encode(message: Numbers, writer: Writer = Writer.create()): Writer {
@@ -161,8 +143,7 @@ export const Numbers = {
   decode(input: Reader | Uint8Array, length?: number): Numbers {
     const reader = input instanceof Reader ? input : new Reader(input);
     let end = length === undefined ? reader.len : reader.pos + length;
-    const message = { ...baseNumbers } as Numbers;
-    message.num = [];
+    const message = createBaseNumbers();
     while (reader.pos < end) {
       const tag = reader.uint32();
       switch (tag >>> 3) {
@@ -185,14 +166,9 @@ export const Numbers = {
   },
 
   fromJSON(object: any): Numbers {
-    const message = { ...baseNumbers } as Numbers;
-    message.num = [];
-    if (object.num !== undefined && object.num !== null) {
-      for (const e of object.num) {
-        message.num.push(Number(e));
-      }
-    }
-    return message;
+    return {
+      num: Array.isArray(object?.num) ? object.num.map((e: any) => Number(e)) : [],
+    };
   },
 
   toJSON(message: Numbers): unknown {
@@ -205,14 +181,9 @@ export const Numbers = {
     return obj;
   },
 
-  fromPartial(object: DeepPartial<Numbers>): Numbers {
-    const message = { ...baseNumbers } as Numbers;
-    message.num = [];
-    if (object.num !== undefined && object.num !== null) {
-      for (const e of object.num) {
-        message.num.push(e);
-      }
-    }
+  fromPartial<I extends Exact<DeepPartial<Numbers>, I>>(object: I): Numbers {
+    const message = createBaseNumbers();
+    message.num = object.num?.map((e) => e) || [];
     return message;
   },
 };
@@ -278,6 +249,7 @@ export interface DataLoaders {
 }
 
 type Builtin = Date | Function | Uint8Array | string | number | boolean | undefined;
+
 export type DeepPartial<T> = T extends Builtin
   ? T
   : T extends Array<infer U>
@@ -288,9 +260,18 @@ export type DeepPartial<T> = T extends Builtin
   ? { [K in keyof T]?: DeepPartial<T[K]> }
   : Partial<T>;
 
+type KeysOfUnion<T> = T extends T ? keyof T : never;
+export type Exact<P, I extends P> = P extends Builtin
+  ? P
+  : P & { [K in keyof P]: Exact<P[K], I[K]> } & Record<Exclude<keyof I, KeysOfUnion<P>>, never>;
+
 // If you get a compile-error about 'Constructor<Long> and ... have no overlap',
 // add '--ts_proto_opt=esModuleInterop=true' as a flag when calling 'protoc'.
 if (util.Long !== Long) {
   util.Long = Long as any;
   configure();
+}
+
+function isSet(value: any): boolean {
+  return value !== null && value !== undefined;
 }
